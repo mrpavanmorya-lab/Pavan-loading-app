@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pawan Loading App - Ludo Game</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #0f172a; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 10px; }
+        h1 { font-size: 1.5rem; margin-bottom: 5px; color: #38bdf8; text-align: center; }
+        .subtitle { font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px; text-align: center; }
+        .game-container { display: flex; flex-direction: column; align-items: center; background: #1e293b; padding: 15px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 420px; border: 1px solid #334155; }
+        
+        .players-bar { display: flex; justify-content: space-between; width: 100%; margin-bottom: 12px; font-size: 0.8rem; gap: 5px; }
+        .player-tag { padding: 4px 8px; border-radius: 6px; font-weight: bold; text-align: center; flex: 1; }
+        .tag-blue { background: #1d4ed8; color: #fff; }
+        .tag-purple { background: #7e22ce; color: #fff; }
+        .tag-pink { background: #db2777; color: #fff; }
+        .tag-navy { background: #0f172a; border: 1px solid #38bdf8; color: #38bdf8; }
+
+        .board { display: grid; grid-template-columns: repeat(15, 1fr); width: 100%; aspect-ratio: 1/1; background: #f8fafc; border: 3px solid #475569; border-radius: 8px; margin-bottom: 15px; position: relative; overflow: hidden; }
+        .cell { border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+        
+        .yard-blue { background: #93c5fd; }
+        .yard-purple { background: #d8b4fe; }
+        .yard-pink { background: #fbcfe8; }
+        .yard-navy { background: #cbd5e1; }
+
+        .controls { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+        .status { font-size: 0.95rem; color: #f8fafc; text-align: center; background: #334155; padding: 8px 12px; border-radius: 8px; width: 100%; font-weight: 500; }
+        
+        .dice-section { display: flex; align-items: center; justify-content: space-between; width: 100%; background: #0f172a; padding: 10px 15px; border-radius: 10px; border: 1px solid #334155; }
+        .dice-box { width: 55px; height: 55px; background: #ffffff; color: #0f172a; font-size: 1.8rem; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #cbd5e1; }
+        
+        button.roll-btn { background: #2563eb; color: white; border: none; padding: 12px 24px; font-size: 1.05rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
+        button.roll-btn:active { transform: scale(0.96); }
+        button.roll-btn:hover { background: #1d4ed8; }
+
+        .rules-note { font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>पवन लोडिंग ऐप</h1>
+    <div class="subtitle">Ludo: 4 Players & 8-to-Spawn</div>
+    
+    <div class="game-container">
+        <div class="players-bar">
+            <div class="player-tag tag-blue" id="pBlue">नीला</div>
+            <div class="player-tag tag-purple" id="pPurple">बैंगनी</div>
+            <div class="player-tag tag-pink" id="pPink">गुलाबी</div>
+            <div class="player-tag tag-navy" id="pNavy">नेवी</div>
+        </div>
+
+        <div class="board" id="ludoBoard"></div>
+        
+        <div class="controls">
+            <div class="status" id="turnStatus">नीले खिलाड़ी की बारी (पासा फेंके)</div>
+            <div class="dice-section">
+                <div class="dice" id="diceDisplay">🎲</div>
+                <button class="roll-btn" onclick="rollDice()">पासा फेंके</button>
+            </div>
+        </div>
+        <div class="rules-note">नियम: गोटी बाहर निकालने के लिए पासे में '8' आना अनिवार्य है।</div>
+    </div>
+
+    <script>
+        const board = document.getElementById('ludoBoard');
+        for (let i = 0; i < 225; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            if (i < 45) {
+                if (i % 15 < 6 && Math.floor(i / 15) < 6) cell.classList.add('yard-blue');
+                else if (i % 15 > 8 && Math.floor(i / 15) < 6) cell.classList.add('yard-purple');
+                else if (i % 15 < 6 && Math.floor(i / 15) > 8) cell.classList.add('yard-pink');
+                else if (i % 15 > 8 && Math.floor(i / 15) > 8) cell.classList.add('yard-navy');
+            }
+            board.appendChild(cell);
+        }
+
+        const players = ['नीला (Blue)', 'बैंगनी (Purple)', 'गुलाबी (Pink)', 'नेवी (Navy)'];
+        let currentTurn = 0;
+
+        function rollDice() {
+            const diceRoll = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('diceDisplay').innerText = diceRoll;
+            
+            let message = `पासे में आया: ${diceRoll} | `;
+            if (diceRoll === 8 || diceRoll === 6) {
+                message += `${players[currentTurn]} की गोटी बाहर निकल सकती है!`;
+            } else {
+                message += `${players[currentTurn]} की बारी आगे बढ़ी।`;
+            }
+            document.getElementById('turnStatus').innerText = message;
+            currentTurn = (currentTurn + 1) % players.length;
+        }
+    </script>
+</body>
+</html>
